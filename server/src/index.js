@@ -2,8 +2,10 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const express = require('express');
 const cors = require('cors');
+const cron = require('node-cron');
 const { logger } = require('./utils/logger');
 const { setupSupabase } = require('./utils/supabase');
+const { initScheduledTasks, stopScheduledTasks } = require('./services/cronService');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -20,13 +22,10 @@ const { checkForNewVideos } = require('./services/youtubeService');
 
 // Initialize Express app
 const app = express();
+const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors({
-  origin: '*', // Autorise toutes les origines en développement
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors());
 app.use(express.json());
 
 // Initialize Supabase
@@ -62,54 +61,45 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Les tâches cron sont déplacées dans la section de développement local
+// Initialiser les tâches planifiées pour le monitoring automatique
+initScheduledTasks();
 
-// Pour le développement local uniquement
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 3001;
-  const cron = require('node-cron');
-  const { initScheduledTasks, stopScheduledTasks } = require('./services/cronService');
-  
-  // Initialiser les tâches planifiées pour le monitoring automatique
-  initScheduledTasks();
+// Maintenir la tâche horaire originale pour la rétrocompatibilité
+const hourlyTask = cron.schedule(process.env.CRON_SCHEDULE || '0 * * * *', async () => {
+  logger.info('Running scheduled task: Checking for new videos');
+  try {
+    await checkForNewVideos();
+    logger.info('Completed video check');
+  } catch (error) {
+    logger.error('Error in scheduled video check:', error);
+  }
+});
 
-  // Maintenir la tâche horaire originale pour la rétrocompatibilité
-  const hourlyTask = cron.schedule(process.env.CRON_SCHEDULE || '0 * * * *', async () => {
-    logger.info('Running scheduled task: Checking for new videos');
-    try {
-      await checkForNewVideos();
-      logger.info('Completed video check');
-    } catch (error) {
-      logger.error('Error in scheduled video check:', error);
-    }
-  });
-  
-  const server = app.listen(PORT, () => {
-    logger.info(`Server running on port ${PORT}`);
-    logger.info(`Monitoring automatique activé (vérification toutes les 6 heures)`);
-  });
-  
-  // Handle graceful shutdown
-  process.on('SIGTERM', () => {
-    logger.info('SIGTERM signal received: closing HTTP server');
-    // Arrêter les tâches planifiées
-    stopScheduledTasks();
-    hourlyTask.stop();
-    server.close(() => {
-      logger.info('HTTP server closed');
-    });
-  });
-  
-  process.on('SIGINT', () => {
-    logger.info('SIGINT signal received: closing HTTP server');
-    // Arrêter les tâches planifiées
-    stopScheduledTasks();
-    hourlyTask.stop();
-    server.close(() => {
-      logger.info('HTTP server closed');
-    });
-  });
-}
+// Start the server
+const server = app.listen(PORT, () => {
+  logger.info(`Server running on port ${PORT}`);
+  logger.info(`Monitoring automatique activé (vérification toutes les 6 heures)`);
+});
 
-// Exporter l'application pour Vercel
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM signal received: closing HTTP server');
+  // Arrêter les tâches planifiées
+  stopScheduledTasks();
+  hourlyTask.stop();
+  server.close(() => {
+    logger.info('HTTP server closed');
+  });
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT signal received: closing HTTP server');
+  // Arrêter les tâches planifiées
+  stopScheduledTasks();
+  hourlyTask.stop();
+  server.close(() => {
+    logger.info('HTTP server closed');
+  });
+});
+
 module.exports = app;
