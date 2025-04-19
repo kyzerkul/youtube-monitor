@@ -25,7 +25,36 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: function(origin, callback) {
+    // Permettre les requêtes avec un origin null (en dev local) ou toutes les requêtes Render
+    const allowedOrigins = [
+      'https://youtube-monitor-client.onrender.com',
+      'https://youtube-monitor-ccmn.onrender.com',
+      'http://localhost:3000'
+    ];
+    
+    if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.onrender.com')) {
+      callback(null, true);
+    } else {
+      logger.warn(`Origin bloqué : ${origin}`);
+      callback(new Error(`Origin ${origin} non autorisé par CORS`));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true,
+  maxAge: 86400 // 24 heures
+}));
+
+// Configuration des en-têtes pour prévenir les problèmes CSP
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  next();
+});
+
 app.use(express.json());
 
 // Initialize Supabase
