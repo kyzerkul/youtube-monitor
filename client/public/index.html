@@ -9,7 +9,8 @@
       name="description"
       content="YouTube Monitor - Monitor YouTube channels and create WordPress articles"
     />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.onrender.com; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; connect-src 'self' https://*.onrender.com https://favqvpzivoqxrohqlgku.supabase.co;" />
+    <!-- Politique de sécurité très permissive pour contourner les restrictions de Render -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'self' data: 'unsafe-inline' 'unsafe-eval' https: http:; script-src * 'self' data: 'unsafe-inline' 'unsafe-eval' https: http:; connect-src * 'self' data: 'unsafe-inline' https: http:; img-src * 'self' data: 'unsafe-inline' https: http:; style-src * 'self' data: 'unsafe-inline' https: http:; font-src * 'self' data: 'unsafe-inline' https: http:; frame-src * 'self' data: 'unsafe-inline' https: http:;" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

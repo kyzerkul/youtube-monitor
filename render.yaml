@@ -8,9 +8,6 @@ services:
     startCommand: cd server && node src/index.js
     headers:
       - path: /*
-        name: Content-Security-Policy
-        value: "default-src 'self'; connect-src 'self' https://*.onrender.com https://*.supabase.co; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:;"
-      - path: /*
         name: Access-Control-Allow-Origin
         value: "*"
     envVars:
@@ -18,6 +15,14 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
     
   # Service Frontend (React)
   - type: web
@@ -26,19 +31,7 @@ services:
     plan: free
     buildCommand: cd client && npm install && npm run build
     staticPublishPath: ./client/build
-    headers:
-      - path: /*
-        name: Content-Security-Policy
-        value: "default-src 'self' https://*.onrender.com; font-src 'self' https://fonts.gstatic.com data:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; img-src 'self' data: https:; connect-src 'self' https://*.onrender.com https://*.supabase.co;"
-      - path: /*
-        name: X-Frame-Options
-        value: "DENY"
-      - path: /*
-        name: X-Content-Type-Options
-        value: "nosniff"
-      - path: /*
-        name: Referrer-Policy
-        value: "strict-origin-when-cross-origin"
+    # Pas de headers définis ici, ils seront gérés par le fichier _headers dans le dossier build
     routes:
       - type: rewrite
         source: /*
