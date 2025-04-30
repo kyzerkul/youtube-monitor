@@ -3,6 +3,9 @@ const { logger } = require('./logger');
 
 let supabase = null;
 
+// Check if DEV_MODE is enabled via environment variable
+const DEV_MODE_ENABLED = process.env.DEV_MODE === 'true' || process.env.NODE_ENV === 'development';
+
 /**
  * Set up and initialize the Supabase client
  * @returns {Object} The Supabase client instance
@@ -16,7 +19,18 @@ const setupSupabase = () => {
       throw new Error('Supabase URL or key is missing from environment variables');
     }
     
-    supabase = createClient(supabaseUrl, supabaseKey);
+    // En mode développement, on utilise la clé de service qui bypasse les politiques RLS
+    if (DEV_MODE_ENABLED) {
+      logger.info('DEV MODE: Using Supabase service role key (bypassing RLS)');
+      // La clé actuelle est déjà celle du service role, mais on le mentionne explicitement
+      supabase = createClient(supabaseUrl, supabaseKey, {
+        auth: {
+          persistSession: false
+        }
+      });
+    } else {
+      supabase = createClient(supabaseUrl, supabaseKey);
+    }
     logger.info('Supabase client initialized successfully');
     
     return supabase;
