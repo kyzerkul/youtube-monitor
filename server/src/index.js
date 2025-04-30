@@ -31,6 +31,7 @@ app.use(cors({
     const allowedOrigins = [
       'https://youtube-monitor-client.onrender.com',
       'https://youtube-monitor-ccmn.onrender.com',
+      'https://youtube-monitor-nu.vercel.app',
       'http://localhost:3000'
     ];
     
