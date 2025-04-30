@@ -20,7 +20,8 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
   
   // Flag to track if we're in development mode
-  const isDev = process.env.NODE_ENV === 'development';
+  const isDev = process.env.NODE_ENV === 'development' || process.env.REACT_APP_DEV_MODE === 'true';
+  console.log('Environment mode:', { NODE_ENV: process.env.NODE_ENV, DEV_MODE: process.env.REACT_APP_DEV_MODE, isDev });
   const devAdminInfo = {
     id: '00000000-0000-0000-0000-000000000000',
     name: 'Admin User (Dev)',
