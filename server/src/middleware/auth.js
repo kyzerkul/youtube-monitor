@@ -3,14 +3,16 @@ const { logger } = require('../utils/logger');
 
 // Development bypass flag - set to true to bypass authentication
 const BYPASS_AUTH = true;
+// Check if DEV_MODE is enabled via environment variable
+const DEV_MODE_ENABLED = process.env.DEV_MODE === 'true';
 
 /**
  * Middleware to verify JWT token
  * In development mode, authentication is bypassed if BYPASS_AUTH is true
  */
 const authenticateToken = (req, res, next) => {
-  // In development mode, bypass authentication if the flag is set
-  if (BYPASS_AUTH && process.env.NODE_ENV === 'development') {
+  // Bypass authentication if in development mode or DEV_MODE is enabled
+  if (BYPASS_AUTH && (process.env.NODE_ENV === 'development' || DEV_MODE_ENABLED)) {
     logger.info('*** DEV MODE: Authentication bypassed ***');
     // Add a dummy user to the request
     req.user = {
