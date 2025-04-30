@@ -53,7 +53,7 @@ export const AuthProvider = ({ children }) => {
           axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
           
           // In dev mode, we can bypass the token verification
-          if (isDev && window.location.pathname.includes('/dev-login')) {
+          if (isDev) {
             console.log('Development mode: bypassing token verification');
             setUser(devAdminInfo);
             setToken(storedToken);
